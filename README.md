@@ -65,3 +65,5 @@ Open questions:
 * Adopt open source principles
 * Write for a global audience
 * Write sustainably
+
+The full guide: [Writing and Formatting a New Lesson](https://programminghistorian.org/en/author-guidelines#step-2-writing-and-formatting-a-new-lesson).
