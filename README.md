@@ -10,14 +10,14 @@ materials (images, tables etc.) but some data and scripts as well.
 
 ## Planned topics of the tutorial
 
-Method/tools
+Methods/tools:
 * MarcEdit (Argula)
 * describing some important MARC data elements (Péter)
 * programming MARC records with Python [PyMarc] (and showing alternatives) (Péter)
 * small/local LLMs? (Michele)
 * Gephi for visualisation (Argula)
 
-The result of analyses
+Data analyses:
 * extraction
   * place and personal name extraction and normalisation (with roles)  (Péter)
     * enriching subject indexing/ information (Argula) – adding additional information about named entities in records (Argula) – external data to match with smaller datasets: FAST, VIAF, etc. (Argula)
@@ -35,7 +35,7 @@ Objectives, principles, general questions:
 * Copy cataloging versus original cataloging depending on the topic of the project (Halie)
 * Also being aware of local cataloging practices that may or may not impact the analysis or computational methods (Doreen)
 
-datasets:
+Datasets:
 * a smaller library catalogue (e.g. Estonian nat. bibl.), or a part of a larger one (Belgian, German, Czech etc.) (Péter)
 * https://github.com/pkiraly/qa-catalogue#datasources
 * https://about.muse.jhu.edu/muse/open-access-marc (Doreen)
