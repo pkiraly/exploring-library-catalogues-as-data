@@ -1,0 +1,1 @@
+This directory will contain the figures displayed by the lesson itself
