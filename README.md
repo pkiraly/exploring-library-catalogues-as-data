@@ -54,3 +54,14 @@ Open questions:
 - `figures`: the figures displayed by the lesson itself
 
 (This structure follows the suggestion of the Library Carpentry's [Introduction to R](https://librarycarpentry.github.io/lc-r/02-starting-with-data.html) lesson.)
+
+## Some Important Reminders:
+
+* Tutorials should not exceed 8,000 words (including code).
+* Keep your tone formal but accessible.
+* Talk to your reader in the second person (you).
+* Adopt a widely-used version of English (British, Canadian, Indian, South African etc).
+* The piece of writing is a "tutorial" or a "lesson" and not an "article".
+* Adopt open source principles
+* Write for a global audience
+* Write sustainably
