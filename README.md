@@ -1,4 +1,4 @@
-# Exploring library catalogues as data - a lesson for ProgrammingHistorian
+# Exploring library catalogues as data -- a lesson for ProgrammingHistorian
 
 This repository is to support writing activities of a lesson provisionally 
 titled as "Exploring library catalogues as data". These activities belong to
@@ -45,3 +45,10 @@ Open questions:
 * Question for Peter (and anyone else who is interested in contributing): Is the lesson goal to show researchers how to use marc records to answer their research questions? (I.e. need to explain how to navigate a set of marc records?) Starting from sample research questions then find datasets and methods to work with them? (I am reminded of this link Peter showed me: https://bibliodata.substack.com/p/an-outline-of-an-imagined-training) Or is it to select a small set of marc records and build a model or something that can be used for i.e. lesson 2 or 6 or linked sticky notes? (Doreen)
 * The focus is on training and fine-tuning a small LLM to make it an expert in dealing with bibliographic data. (Arnoud)
 
+## directory structure
+
+- data: the input files containing unmodified library records
+- data_output: output files of the analyses
+- fig_output: output images of the analyses
+- scripts: the scripts that contribute in data analysis
+- figures: the figures displayed by the lesson itself
