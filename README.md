@@ -1,4 +1,4 @@
-# Exploring library catalogues as data -- a lesson for ProgrammingHistorian
+# Exploring library catalogues as data – a lesson for ProgrammingHistorian
 
 This repository is to support writing activities of a lesson provisionally 
 titled as "Exploring library catalogues as data". These activities belong to
@@ -52,3 +52,5 @@ Open questions:
 - fig_output: output images of the analyses
 - scripts: the scripts that contribute in data analysis
 - figures: the figures displayed by the lesson itself
+
+(This structure follows the suggestion of the Library Carpentry's [Introduction to R](https://librarycarpentry.github.io/lc-r/02-starting-with-data.html) lesson.)
