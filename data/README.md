@@ -1,1 +1,1 @@
-This directory will contain the output files of the analyses
+This directory will contain the input files containing unmodified library records
