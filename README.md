@@ -47,10 +47,10 @@ Open questions:
 
 ## directory structure
 
-- data: the input files containing unmodified library records
-- data_output: output files of the analyses
-- fig_output: output images of the analyses
-- scripts: the scripts that contribute in data analysis
-- figures: the figures displayed by the lesson itself
+- `data`: the input files containing unmodified library records
+- `data_output`: output files of the analyses
+- `fig_output`: output images of the analyses
+- `scripts`: the scripts that contribute in data analysis
+- `figures`: the figures displayed by the lesson itself
 
 (This structure follows the suggestion of the Library Carpentry's [Introduction to R](https://librarycarpentry.github.io/lc-r/02-starting-with-data.html) lesson.)
