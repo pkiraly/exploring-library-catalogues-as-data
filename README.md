@@ -1,5 +1,4 @@
-# exploring-library-catalogues-as-data
-Exploring library catalogues as data - a lesson for ProgrammingHistorian
+# Exploring library catalogues as data - a lesson for ProgrammingHistorian
 
 This repository is to support writing activities of a lesson provisionally 
 titled as "Exploring library catalogues as data". These activities belong to
