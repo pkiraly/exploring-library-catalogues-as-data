@@ -188,6 +188,53 @@ Our final step is to remove the unwanted compressed file:
 os.remove(target_file)
 ```
 
+So far so guud, but this script downloads only a single file, it is not very fexible, we should modify it to download a different file. Let's solve these problem. The new version should accept the URL of the index page, that contains the links to all gzip files as a script parameter.
+
+```Python
+import urllib.request
+import os
+import gzip
+import shutil
+import re
+import sys
+import lxml.html
+from argparse import ArgumentParser
+```
+
+We will use some new libraries:
+
+* `sys` contains system-specific parameters and functions, https://docs.python.org/3/library/sys.html
+* `lxml` responsinble for handling XML and HTML, https://lxml.de/import lxml.html
+* `argparse` is a parser for command-line options, arguments and subcommands, https://docs.python.org/3/library/argparse.html
+
+The last line's format (`from ... import ...`) is used to limit the import: we will use only a specific part of the library, here the `ArgumentParser` object.
+
+Then we create a configuration with default values:
+
+```Python
+configuration = {
+  'index': 'https://metadata.library.yale.edu/MARCXML/bib_20250706_full',
+  'target_dir': 'raw-data/yale'
+}
+```
+
+Because we will download multiple files, it would be useful to separate the code into a function. We start with the signature of the function and its documentation:
+
+```Python
+def download_file(file_name):
+    """
+    Downloads a file, saves it into a directory, uncompresses it and deletes the compressed version.
+    The base URL and the target directory come from the configuration object.
+    Parameters                              
+    ----------
+    file_name : str
+        the name of the downloadable file
+    """
+```
+
+
+
+
 
 #### Preprocessing
 File formats, data structures, conversion, and data loss control.

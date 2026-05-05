@@ -15,13 +15,16 @@ import lxml.html
 # argparse — Parser for command-line options, arguments and subcommands, https://docs.python.org/3/library/argparse.html
 from argparse import ArgumentParser
 
-target_dir = 'raw-data/yale'
+configuration = {
+  'index': 'https://metadata.library.yale.edu/MARCXML/bib_20250706_full',
+  'target_dir': 'raw-data/yale'
+}
 
-def download_file(base_url, file_name):
-    print(f'downloading {file_name}...')
-    remote_file = base_url + '/' + file_name
-    local_file = target_dir + '/' + file_name
+def download_file(file_name):
+    remote_file = configuration['index'] + '/' + file_name
+    local_file = configuration['target_dir'] + '/' + file_name
     uncompressed_file = re.sub(r'.gz', '', local_file)
+    print(f'downloading {remote_file} to {uncompressed_file} ...')
 
     if not os.path.exists(local_file) and not os.path.exists(uncompressed_file):
         try:
@@ -40,26 +43,25 @@ def download_file(base_url, file_name):
 def main() -> int:
     parser = ArgumentParser()
     parser.add_argument("-i", "--index", dest="index", help="the index page that contains list of files")
+    parser.add_argument("-t", "--target_dir", dest="target_dir", help="the target directory where the files will be stored locally")
     args = parser.parse_args()
 
-    # default_url = 'https://metadata.library.yale.edu/MARCXML/bib_20250706_full'
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
+    if args.index is not None:
+        configuration['index'] = args.index
+    if args.target is not None:
+        configuration['target_dir'] = args.target_dir
 
-    if args.index is None:
-        print(parser.print_help())
-        exit()
+    if not os.path.exists(configuration['target_dir']):
+        os.makedirs(configuration['target_dir'])
 
-    base_url = args.index
-
-    with urllib.request.urlopen(base_url) as response:
+    with urllib.request.urlopen(configuration['index']) as response:
         content = response.read()
         doc = lxml.html.fromstring(content)
         items = doc.findall('body/table/tr/td/a', {})
         for item in items:
             file_name = item.get('href')
             if re.search('\\.gz$', file_name):
-                download_file(base_url, file_name)
+                download_file(file_name)
 
 if __name__ == '__main__':
     sys.exit(main())
