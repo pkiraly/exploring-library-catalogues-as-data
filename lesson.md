@@ -160,16 +160,33 @@ if not os.path.exists(target_dir):
     os.makedirs(target_dir)
 ```
 
-target_file = target_dir + '/bib_20250706_full_000_00.xml.gz'
+Then we should specify the file in our local machine. We extract it from the URL with a regular expression. `/([^/]+)$` means find a slash character (`/`) followed by one or more not slash characters (`[^/]+`) till the end of the string (`$`), and put these characters into a group `(...)`. With this we specify the file name. With `group(1)` we can extract the content of the first (and in this case the only) group. Finally, we concatenate the directory and file names with an f-string.
 
+```Python
+file_name = re.search('/([^/]+)$', url).group(1)
+target_file = f'{target_dir}/{file_name}'
+```
+
+The act of downloading is pretty simple, it saves the content of the URL into the specified file:
+
+```Python
 urllib.request.urlretrieve(url, target_file)
+```
 
+As we would like to work with XML file and not a compressed file (which would be also possible, but not discussed in this lesson), we should extract it. It needs some steps. With `gzip.open()` we open the archive file in binary read mode (it behaves similar than other file read operations in Python), and we specify a file handle (`f_in`). We should also specify the name of the uncompressed file with the help of another regular expression. `re.sub()` substitutes strings, here we are looking for the `.gz` extension in the file name, and replace it with an empty string - in other words, we remove it. Note: in regular expression `.` (dot character) has a special meaning: it fits any character. If we want to mean the real dot, we should escape this interpretation with the blackslashes. Then we open a binary file for writing and utilize the `shutil.copyfileobj()` method to copy the content. 
+
+```Python
 with gzip.open(target_file, 'rb') as f_in:
-    uncompressed_file = re.sub(r'.gz', '', target_file)
+    uncompressed_file = re.sub(r'\\.gz$', '', target_file)
     with open(uncompressed_file, 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
+```
 
+Our final step is to remove the unwanted compressed file:
+
+```Python
 os.remove(target_file)
+```
 
 
 #### Preprocessing
