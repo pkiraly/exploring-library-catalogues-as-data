@@ -126,7 +126,7 @@ Format all references using the Chicago Manual of Style.
 ### Workflow
 #### Data acquisition
 
-In this lesson we will show the least complicated data aquisition method: downloading one or more files. There are a number of API
+In this lesson we will show the least complicated data aquisition method: downloading one or more files. There are a number of library specific APIs that are available in many different libraries to access records (OAI-PMH, RSU, Z39.50), these will be described in other tuturials. Fortunately there are libraries that enable file downloads -- see a list in the appendix of this lesson. One of them is Yale, that published the catalogue under CC0 license at https://guides.library.yale.edu/c.php?g=923429. The actually downloadable files can be accessed at https://metadata.library.yale.edu/MARCXML/. This page contains full catalogue, and increments. At time of writing the files belong to the full catalogue are listed at https://metadata.library.yale.edu/MARCXML/bib_20250706_full/.
 
 #### Preprocessing
 File formats, data structures, conversion, and data loss control.
