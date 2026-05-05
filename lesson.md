@@ -128,6 +128,50 @@ Format all references using the Chicago Manual of Style.
 
 In this lesson we will show the least complicated data aquisition method: downloading one or more files. There are a number of library specific APIs that are available in many different libraries to access records (OAI-PMH, RSU, Z39.50), these will be described in other tuturials. Fortunately there are libraries that enable file downloads -- see a list in the appendix of this lesson. One of them is Yale, that published the catalogue under CC0 license at https://guides.library.yale.edu/c.php?g=923429. The actually downloadable files can be accessed at https://metadata.library.yale.edu/MARCXML/. This page contains full catalogue, and increments. At time of writing the files belong to the full catalogue are listed at https://metadata.library.yale.edu/MARCXML/bib_20250706_full/.
 
+In the first step we explain how to download a single file.
+
+As usual in Python we should start with importing the Python libraries we would like to utilize in the script:
+
+```Python
+import urllib.request
+import os
+import gzip
+import shutil
+import re
+```
+
+* `urllib.request` is a library for opening URLs, https://docs.python.org/3/library/urllib.request.html 
+* `os` contains miscellaneous operating system interfaces, https://docs.python.org/3/library/os.html
+* `gzip` supports operations on gzip files, https://docs.python.org/3/library/gzip.html
+* `shutil` provides high-level file operations, https://docs.python.org/3/library/shutil.html
+* `re` provides regular expression operations, https://docs.python.org/3/library/re.html
+
+We should specify the URL of the file we would like to download:
+
+```Python
+url = 'https://metadata.library.yale.edu/MARCXML/bib_20250706_full/bib_20250706_full_000_00.xml.gz'
+```
+
+In our machine, it will be located in a specific directory (we call it `target_dir`), and if it is not yet existing, we should create it.
+
+```Python
+target_dir = 'data/yale'
+if not os.path.exists(target_dir):
+    os.makedirs(target_dir)
+```
+
+target_file = target_dir + '/bib_20250706_full_000_00.xml.gz'
+
+urllib.request.urlretrieve(url, target_file)
+
+with gzip.open(target_file, 'rb') as f_in:
+    uncompressed_file = re.sub(r'.gz', '', target_file)
+    with open(uncompressed_file, 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
+
+os.remove(target_file)
+
+
 #### Preprocessing
 File formats, data structures, conversion, and data loss control.
 
