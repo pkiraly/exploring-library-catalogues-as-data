@@ -21,6 +21,14 @@ configuration = {
 }
 
 def download_file(file_name):
+    """
+    Downloads a file, saves it into a directory, uncompresses it and deletes the compressed version.
+    The base URL and the target directory come from the configuration object.
+    Parameters                              
+    ----------
+    file_name : str
+        the name of the downloadable file
+    """
     remote_file = configuration['index'] + '/' + file_name
     local_file = configuration['target_dir'] + '/' + file_name
     uncompressed_file = re.sub(r'.gz', '', local_file)
@@ -40,7 +48,7 @@ def download_file(file_name):
     if os.path.exists(local_file):
         os.remove(local_file)
 
-def main() -> int:
+def main():
     parser = ArgumentParser()
     parser.add_argument("-i", "--index", dest="index", help="the index page that contains list of files")
     parser.add_argument("-t", "--target_dir", dest="target_dir", help="the target directory where the files will be stored locally")
@@ -48,13 +56,14 @@ def main() -> int:
 
     if args.index is not None:
         configuration['index'] = args.index
-    if args.target is not None:
+    if args.target_dir is not None:
         configuration['target_dir'] = args.target_dir
 
     if not os.path.exists(configuration['target_dir']):
         os.makedirs(configuration['target_dir'])
 
     with urllib.request.urlopen(configuration['index']) as response:
+        print(response)
         content = response.read()
         doc = lxml.html.fromstring(content)
         items = doc.findall('body/table/tr/td/a', {})

@@ -218,7 +218,7 @@ configuration = {
 }
 ```
 
-Because we will download multiple files, it would be useful to separate the code into a function. We start with the signature of the function and its documentation:
+Because we will download multiple files, it would be useful to separate the code into a function, that accepts a file name, and utilizes the configuration object. We start with the function's signature and documentation:
 
 ```Python
 def download_file(file_name):
@@ -232,7 +232,92 @@ def download_file(file_name):
     """
 ```
 
+Next we set the variables based on the input parameter and the configuration. A log entry will inform the user about the process:
 
+```Python
+    remote_file = configuration['index'] + '/' + file_name
+    local_file = configuration['target_dir'] + '/' + file_name
+    uncompressed_file = re.sub(r'.gz', '', local_file)
+    print(f'downloading {remote_file} to {uncompressed_file} ...')
+```
+
+The bulk of the function repeats what we saw in the single file download, with a check (launch download if the neither the gzip nor the xml file are available) and a try-except block. This later catches network problems and informs the user. If we would not put the functionality inside that block an error would stop the script itself.
+
+```Python
+    if not os.path.exists(local_file) and not os.path.exists(uncompressed_file):
+        try:
+            urllib.request.urlretrieve(remote_file, local_file)
+
+            with gzip.open(local_file, 'rb') as f_in:
+                with open(uncompressed_file, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+        except urllib.error.HTTPError as e:
+            print("A network problem occured: ", e)
+    
+    if os.path.exists(local_file):
+        os.remove(local_file)
+```
+
+It is a good practice to put the entry point of a Python script into a `main()` function. We start it with parsing the arguments. First we create a new `ArgumentParser` object, and define two arguments: index and target_dir. In the `add_argument` we provide the short and long argument name the user can specify in the command line. `dest` sets the name of the variable that hold the value, `help` sets the help text (which is displayed when we cann the script if `h` or `--help` arguments). The `parse_args()` method parses the user input, and stores it in the `args` object.
+
+```Python
+def main():
+    parser = ArgumentParser()
+    parser.add_argument("-i", "--index", dest="index", help="the index page that contains list of files")
+    parser.add_argument("-t", "--target_dir", dest="target_dir", help="the target directory where the files will be stored locally")
+    args = parser.parse_args()
+```
+
+If the user sets these arguments we should save them into the `configuration` object overwriting its default values:
+
+```Python
+    if args.index is not None:
+        configuration['index'] = args.index
+    if args.target is not None:
+        configuration['target_dir'] = args.target_dir
+```
+
+As in the single file setup we should create the target directory if it is not already existing:
+
+```Python
+    if not os.path.exists(configuration['target_dir']):
+        os.makedirs(configuration['target_dir'])
+```
+
+And finally we should fetch the index page, extract links to the .gz files, and call the `download_file()` function. This time we do not save the result of URL request, but save it into memory as a [HTTPResponse](https://docs.python.org/3/library/http.client.html#http.client.HTTPResponse) object. We read its content into a string, then the `lxml` library parses the HTML structure allowing us to run search with an XPath expression. `body/table/tr/td/a` finds all links inside the page tables. We iterate over them, extracting the `href` attribute of each links, and if they end with `.gz`, calling the download function.
+
+```Python
+    with urllib.request.urlopen(configuration['index']) as response:
+        content = response.read()
+        doc = lxml.html.fromstring(content)
+        items = doc.findall('body/table/tr/td/a', {})
+        for item in items:
+            file_name = item.get('href')
+            if re.search('\\.gz$', file_name):
+                download_file(file_name)
+```
+
+The last lines of the script ensure that the `main()` function is called:
+
+```Python
+if __name__ == '__main__':
+    sys.exit(main())
+```
+
+We can use the script the following way
+
+```Python
+download-multiple-files.py [-i INDEX] [-t TARGET_DIR]
+```
+
+such as
+
+```Python
+python download-multiple-files.py \
+    --index https://metadata.library.yale.edu/MARCXML/bib_20250706_full \
+    --target raw-data/yale
+```
 
 
 
