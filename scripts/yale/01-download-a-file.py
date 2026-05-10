@@ -1,7 +1,6 @@
 import urllib.request
 import os
 import gzip
-# shutil — High-level file operations, https://docs.python.org/3/library/shutil.html
 import shutil
 import re
 
