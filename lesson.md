@@ -321,7 +321,7 @@ python download-multiple-files.py \
 
 #### Preprocessing
 
-In this lesson we will describe how to transform three types of MARC files to Python's Pandas data frame, then save them to CSV file. The three types are:
+In this section we will describe how to transform three types of MARC files to Python's Pandas data frame, then save them to a CSV file. The three types are:
 
 - binary MARC file formatted according to [ISO 2709](https://en.wikipedia.org/wiki/ISO_2709) format
 - MARCXML file
@@ -333,7 +333,7 @@ MARC21 records' logical structure does not fit to the tidy tabular format that (
 2. Each observation is a row; each row is an observation.
 3. Each value is a cell; each cell is a single value.
 
-The problem is that in MARC21 there are repetable fields, e.g. multiple subjects, so if you would like to create a table, where there are columns for identifier and subject, you should decide if you would like to put all subject headings into a single cell, or you would like to create multiple rows for each pair of identifier and subject. Both approaches have its own advantage and disadvantage - you should decide on choosing according to the objective of the analysis.
+The problem is that in MARC21 there are repeatable fields, e.g. multiple subjects, so if you would like to create a table, where there are columns for identifier and subject, you should decide if you would like to put all subject headings into a single cell, or you would like to create multiple rows for each pair of identifier and subject. Both approaches have their own advantages and disadvantages - you should decide on choosing according to the objective of the analysis.
 
 Let's start with reading a binary MARC file with the [PyMarc](https://gitlab.com/pymarc/pymarc) package.
 
@@ -346,14 +346,14 @@ with open('raw-data/pymarc/marc.dat', 'rb') as fh:
         print(record.title)
 ```
 
-The code is extracted from the package's README. It opens a binary (ISO 2709) file with the standard Python `open` function, and pass the file handler to the package's `MARCReader` class. It provides an iterator, so we can iterate all records in the file one by one. The MARC21 record is  represented as a `Record` object, that provides a number of methods to access and modify data elements inside a record. Here we only print the title of the record -- i.e. field `245$a` (title) concatenated with `$b` (Remainder of title) if the later exists (about the details of these subfield see [MARC21 documentation](https://www.loc.gov/marc/bibliographic/bd245.html)).
+The code is extracted from the package's README. It opens a binary (ISO 2709) file with the standard Python `open` function, and passes the file handler to the package's `MARCReader` class. It provides an iterator, so we can iterate all records in the file one by one. The MARC21 record is  represented as a `Record` object that provides a number of methods to access and modify data elements inside a record. Here we only print the title of the record -- i.e. field `245$a` (title) concatenated with `$b` (Remainder of title) if the latter exists (about the details of these subfields see [MARC21 documentation](https://www.loc.gov/marc/bibliographic/bd245.html)).
 
-For reading MARCXML we should follow select a strategy based on the size of the file and the memory we have. PyMarc provides two helper functions: 
+For reading MARCXML we should select a strategy based on the size of the file and the memory we have. PyMarc provides two helper functions: 
 
 - `parse_xml_to_array` reads the whole file and creates a list of `Record` objects
 - `map_xml` reads records one by one and calls a user defined function on it. For this you have to define a function
 
-How it looks like in practice? 
+How does it look like in practice? 
 
 `parse_xml_to_array`:
 
@@ -375,6 +375,44 @@ def process_record(record):
 
 map_xml(process_record, 'raw-data/yale/bib_20250706_full_000_00.xml')
 ```
+
+In these examples all what we did is just printing something, but how we can create Pandas from the records? Start with a simple case: collect record ID and title. In the last code snippet we already had a `process_record` section. We will modify it, but for the sake of unity we will replace the `print()` call in the other two code:
+
+```Python
+for record in reader:
+    process_record(record)
+```
+
+and
+
+```Python
+for record in records:
+    process_record(record)
+```
+
+so now we have a single `process_record` function, that can behave the same even we process  binary, xml or large xml files. We change this to extract particular data elements (identifier and title) from each MARC21 record, then to build a pandas data frame.
+
+```Python
+from pymarc import map_xml
+import pandas as pd
+
+ids = []
+titles = []
+
+def process_record(record):
+    ids.append(record.get('001').value())
+    titles.append(record.title)
+
+input_file_name = 'raw-data/yale/bib_20250706_full_000_00.xml'
+map_xml(process_record, input_file_name)
+
+df = pd.DataFrame({'id': ids, 'title': titles})
+print(df.head())
+```
+
+Here we import pandas package with an alias name `pd`, that is the usual way to use it. We initialize two lists, one for the identifiers, and one for the titles. In the `process_record` function we extract their values from the record object, and append the value to the appropriate lists. At the end we create a pandas data frame with a dictionary. The keys are the column names (id and title), the values are the two list. Here both MARC21 data element are quasi mandatory elements, they are available in every record. For other elements, we should be sure if the record has them, and if not, we should provide a default value, e.g. an emtpy string or `None` value. In the last line we simply make a check, print out the first five rows of the data frame to be sure that the process finished with the result we expected.
+
+There are be other approaches to fullfil this task, e.g. to create an empty data frame at the beginning of the process, and add new rows with pd.append or pd.loc, however these approaches have their disadvantages regarding to speed and memory usage, so they are discouraged.
 
 #### Data harmonisation
 Normalization and data enrichment. The reproducible conversion into a data set suitable for quantitative humanities analysis.
