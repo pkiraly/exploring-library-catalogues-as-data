@@ -414,7 +414,7 @@ Here we import pandas package with an alias name `pd`, that is the usual way to 
 
 There are other approaches to fulfill this task, e.g. to create an empty data frame at the beginning of the process, and add new rows with `pd.append` or `pd.loc`, however these approaches have their disadvantages regarding speed and memory usage, so they are discouraged.
 
-As mentioned above this strategy works well for non repeatable data elements. However in MARC21 there are data elements that could be used multiple times in the same records, for example a book might have multiple subjects. Here we have two options: either join them together with a separator character into the same cell, or save them to another dataframe. Again: it is up to your research question which fit better. If you want only to search if a given subject headings appear in a record, concatenated subject might be enough, if you would like to do statistics on the individual subjects or the correlation of them with other data elements (e.g. comparing them with the title words), the second approach looks better.
+As mentioned above this strategy works well for non repeatable data elements. However in MARC21 there are data elements that could be used multiple times in the same records, for example a book might have multiple subjects. Here we have two options: either join them together with a separator character into the same cell, or save them to another dataframe. Again: it is up to your research question which fits better. If you want only to search if a given subject headings appear in a record, concatenated subject might be enough, if you would like to do statistics on the individual subjects or the correlation of them with other data elements (e.g. comparing them with the title words), the second approach looks better.
 
 The concatenation approach:
 
@@ -446,13 +446,13 @@ df = pd.DataFrame(data)
 print(df.head())
 ```
 
-Here we create dictionary where the keys match the column names, the values are empty lists. When we process a record we append these lists. The identifier and the title are the same as above. For subjects we create a new list. PyMarc provide a `subjects` property for the record object, and it collects the following MARC21 fields: 600, 610, 611, 630, 648, 650, 651, 653, 654, 655, 656, 657, 658, 662, 690, 691, 696, 697, 698, 699. The actual subject headings can be find in `$a` subfield, but we should prepare that it is not always available, so we add only the real values (otherwise our list might contain `None` values for those fields that lacks `$a`). After collecting all subjects into this list, we concatenate them separated by a '|' (pipeline) character, or if the record doesn't have any subject we provide an empty string. Finally we add this string to our subject list. As we have collected all values into a dictionary, we can use that directly in the data frame creation. 
+Here we create a dictionary where the keys match the column names, the values are empty lists. When we process a record we append these lists. The identifier and the title are the same as above. For subjects we create a new list. PyMarc provide a `subjects` property for the record object, and it collects the following MARC21 fields: 600, 610, 611, 630, 648, 650, 651, 653, 654, 655, 656, 657, 658, 662, 690, 691, 696, 697, 698, 699. The actual subject headings can be found in `$a` subfield, but we should be prepared that it is not always available, so we add only the real values (otherwise our list might contain `None` values for those fields that lack `$a`). After collecting all subjects into this list, we concatenate them separated by a '|' (pipeline) character, or if the record doesn't have any subject we provide an empty string. Finally we add this string to our subject list. As we have collected all values into a dictionary, we can use that directly in the data frame creation. 
 
 The other approach is to create a distinct data frame for the subjects (or other repeatable data elements, such as the list of contributors). 
 
 
 ```Python
-rom pymarc import map_xml
+from pymarc import map_xml
 import pandas as pd
 
 titles = {
@@ -481,10 +481,70 @@ df_subjects = pd.DataFrame(subjects)
 print(df_subjects['subject'].value_counts().head())
 ```
 
-Here we create two dictionaries, one for the titles, and one for the subjects. We have to test if the subject field has `$a` subfield, but we do not have to do the trick with the record level subject list. At the end we create two data frames, and thus we can run statistical analysis, such as listing the top subject headings with `value_counts()`. Pandas one can imagine a data frame as a list of Series objects each representing an individual column. Series' `value_counts()` method counts the occurences of individual values, and sort it by descending number, so `head` shows the most frequent subject headings.
+Here we create two dictionaries, one for the titles, and one for the subjects. We have to test if the subject field has `$a` subfield, but we do not have to do the trick with the record level subject list. At the end we create two data frames, and thus we can run statistical analysis, such as listing the top subject headings with `value_counts()`. Pandas one can imagine a data frame as a list of Series objects each representing an individual column. Series' `value_counts()` method counts the occurrences of individual values, and sorts it by descending number, so `head` shows the most frequent subject headings.
 
 #### Data harmonisation
-Normalization and data enrichment. The reproducible conversion into a data set suitable for quantitative humanities analysis.
+
+One of the most frequently utilised data element in bibliographic data science is date of publication. It is usually a year (or range of years), and is the basis of any chronological analysis, asnwering questions such as how feature X changed through times, where X might be the subjects, language, format, authors and other features of the book. The value of the year of publication in MARC21 records however is not a normalised date, so we should apply some transformation to extract a numeric value. On the other hand the normalisation is relatively easier than that of personal or geographic names. In the code we do not provide a very sophisticated solution. For that we suggest you to check and adapt the bibliographica  package's [polish_years](https://github.com/COMHIS/bibliographica/blob/master/R/polish_years.R) function written in R language by Leo Lahti, Hege Roivainen, Niko Ilomaki, and Mikko Tolonen.
+
+In this approach we will check some typical formats with regular expressions. Then we pass the extracted value to the [Undate package](https://undate-python.readthedocs.io/en/latest/index.html) written by Cole Crawford, Rebecca Sutton Koeser, Robert Casties, Julia Damerow, Malte Vogl, Taylor Arnold and Klaus Rettinghaus. This package could accept different date formats, but if the input is not recognisable it throws an exception -- helping us to filter out those dates that don't fit to any format, and using this as a feedback to improve our regular expressions.
+
+```Python
+from pymarc import map_xml
+import pandas as pd
+import re
+from collections import Counter
+from undate import Undate
+
+success_counter = Counter()
+date_counter = Counter()
+
+regexes = [
+    re.compile(r'^c?(\d{4})[\.-]?$'),
+    re.compile(r'^\[c?(\d{4})\??\]$'),
+    re.compile(r'^(\d{4}), c\d{4}\.$'),
+    re.compile(r'^\[(\d{4}), c\d{4}\]$'),
+    re.compile(r'^c?(\d{4})\??\]$'),
+    re.compile(r'^(\d{4})-\d{4}\.$'),
+                                      # these are fallback regexes
+    re.compile(r'^.*?(\d{4}).*$'),    # any four numbers
+    re.compile(r'^.*?(\d{3}-).*?$'),  # three numbers and a dash
+    re.compile(r'^.*?(\d{2}--).*?$'), # two numbers and two dashes
+]
+
+def process_record(record):
+    id = record.get('001').value()
+    date_original = record.pubyear
+    if date_original is not None:
+        date_cleaned = date_original.strip()
+        reg_found = False
+        for reg in regexes:
+            if not reg_found:
+                m = reg.match(date_cleaned)
+                if m is not None:
+                    reg_found = True
+                    date_cleaned = m.group(1)
+                    break
+        if "-" in date_cleaned:
+            date_cleaned = re.sub("-", "0", date_cleaned)
+
+        try:
+            date_undate = Undate(date_cleaned)
+            success_counter.update([True])
+        except ValueError as e:
+            success_counter.update([False])
+            date_counter.update([re.sub("\\d", 'D', date_cleaned)])
+
+input_file_name = 'raw-data/yale/bib_20250706_full_000_00.xml'
+map_xml(process_record, input_file_name)
+
+print(success_counter)
+print(date_counter.most_common(10))
+```
+
+We have to import the constructure (`Undate`) from undate package, and create two counters: `success_counter` will could the number of recognised and unrecognised dates, and `date_counter` will count the number of occurrences of unhandled patterns. `record.pubyear` is a similar alias property as `record.subjects` that we saw earlier -- it returns [260$c](https://www.loc.gov/marc/bibliographic/bd260.html) or [264$c](https://www.loc.gov/marc/bibliographic/bd264.html). We remove leading and trailing white spaces with `trim()`, then iterate over the regular expression. The first one that matches will extract the first group of the match. In regex one can create referencable groups with the parentheses, e.g. `r'^c?(\d{4})[\.-]?$'` will match a string that starts with one or zero 'c' character, that is followed by four numbers, and finally ends with an optional dot or dash character. The four number is in parenthesis, so we can access it as the first group (`group(1)`). The order of the regular expression is important, here on the top of the list we have very specific expressions, while the last three match numbers anywere in the string. In MARC21 when the date is not well known cataloguers uses dash character, so "198-" means that the book has been published in the 1980-es, "19--" means that the book has been published in the 20th century. Now we just simply replace dashes with zeros, so we set the earliest possible year. There might be different approaches for that, and with undate we can set the level of presicion such as century, decade etc. When we cleaned the date, we run the test with undate: if it successfull, we get a new object, and we can register that the transformation was successful, otherwise undate throws and exception that we catch, then increase the number of failures, and count the failed patterns. This later one is not a regular expression, but close to it: we just replace numbers with 'D' (referring to any digits).
+
+After processing all records, we print out the number of success and failures and the top 10 most frequent patterns. Data harmonisation is almost always an iterative process, from based on the output we extend the list of regular expressions (either the specific or the generic ones) up to the point we feel it worth. There is a chance that there are lots of variations that occur very infrequently (or even only once). You can even add some examples or log record identifiers along with the collected patterns if the pattern itself does not help to understand the situation.
 
 #### Data analysis and visualization
 
